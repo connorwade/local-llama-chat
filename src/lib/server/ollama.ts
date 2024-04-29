@@ -1,36 +1,18 @@
-import { pipeline } from 'node:stream/promises';
 import ollama from 'ollama';
+import * as paths from 'node:path';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 
-const history: {
-	role: 'user' | 'assistant' | 'system';
+export type ChatHistory = {
+	role: 'user' | 'assistant';
 	content: string;
-}[] = [];
+}[];
 
-export async function writeToHistory(role: 'user' | 'assistant' | 'system', content: string) {
-	history.push({
-		role,
-		content
+export async function getResponse(history: ChatHistory, stream: boolean = false) {
+	const response = await ollama.chat({
+		model: 'llama3',
+		messages: history,
+		//@ts-ignore ollama.js is dumb
+		stream
 	});
-}
-
-export async function getHistory() {
-	return history;
-}
-
-export async function getStreamResponse() {
-	try {
-		const response = await ollama.chat({ model: 'llama3', messages: history, stream: true });
-		return response;
-	} catch (error) {
-		console.error(error);
-	}
-}
-
-export async function getResponse() {
-	try {
-		const response = await ollama.chat({ model: 'llama3', messages: history });
-		return response;
-	} catch (error) {
-		console.error('LLAMA ERROR:', error);
-	}
+	return response;
 }
