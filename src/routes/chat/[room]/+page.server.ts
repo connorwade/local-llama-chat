@@ -8,11 +8,13 @@ export const load: PageServerLoad = async ({ params }) => {
 	const room = await logic.getRoom(roomId);
 	if (!room[0]?.history) {
 		return {
+			name: room[0].name,
 			history: []
 		};
 	}
 
 	return {
+		name: room[0].name,
 		history: room[0].history
 	};
 };

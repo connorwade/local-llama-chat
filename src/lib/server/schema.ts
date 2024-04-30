@@ -4,6 +4,7 @@ import type { ChatHistory } from './ollama';
 export const rooms = sqliteTable('rooms', {
 	id: integer('id').primaryKey(),
 	history: text('history', { mode: 'json' }).$type<ChatHistory>(),
+	name: text('name').notNull(),
 	createdAt: integer('created_at', { mode: 'timestamp' }),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 });

@@ -3,11 +3,6 @@ import * as llama from '$lib/server/ollama';
 import * as logic from '$lib/server/logic';
 import { error, json } from '@sveltejs/kit';
 
-// Get response from Ollama?
-// const GET: RequestHandler = async ({ params }) => {
-// 	const { room } = params;
-// };
-
 export const GET: RequestHandler = async ({ params }) => {
 	const roomId = Number(params.room);
 
@@ -26,6 +21,8 @@ export const GET: RequestHandler = async ({ params }) => {
 			content: response.message.content
 		}
 	]);
+
+	console.log()
 
 	if (!response) {
 		error(500, 'Failed to get response from Ollama');

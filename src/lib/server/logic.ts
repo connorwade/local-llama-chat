@@ -11,20 +11,24 @@ export async function getRoom(id: number) {
 	return await db.select().from(rooms).where(eq(rooms.id, id)).execute();
 }
 
-export async function createRoom({ history }: { history: ChatHistory }) {
+export async function createRoom(name: string, history: ChatHistory) {
 	return await db
 		.insert(rooms)
-		.values({ history })
+		.values({ history, name })
 		.returning({ id: rooms.id, history: rooms.history })
 		.execute();
 }
 
-export async function createEmptyRoom() {
+export async function createEmptyRoom(name: string) {
 	return await db
 		.insert(rooms)
-		.values({ history: [] })
+		.values({ history: [], name })
 		.returning({ id: rooms.id, history: rooms.history })
 		.execute();
+}
+
+export async function deleteRoom(id: number) {
+	return await db.delete(rooms).where(eq(rooms.id, id)).execute();
 }
 
 export async function addHistory(id: number, history: ChatHistory) {

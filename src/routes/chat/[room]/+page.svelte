@@ -5,7 +5,7 @@
 
 	export let data: PageServerData;
 
-	let { history } = data;
+	let { history, name } = data;
 	let loading = false;
 
 	console.log('history:', history);
@@ -109,17 +109,23 @@
 </script>
 
 <main class="p-3 flex flex-col h-full">
-	<div class="overflow-y-auto h-5/6">
+	<h1 class="text-3xl mb-2">{name}</h1>
+	<a class="btn btn-info w-fit" href="/chat">
+		<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"
+			><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" /></svg
+		> Back</a
+	>
+	<div class="overflow-y-auto h-5/6 m-3 mb-8 p-1 border-primary rounded-md shadow-lg shadow-info">
 		{#each history as message}
 			<div
-				class="chat"
+				class="chat p-3"
 				class:chat-start={message.role === 'user'}
 				class:chat-end={message.role === 'assistant'}
 			>
 				<div
 					class:chat-bubble-primary={message.role === 'assistant'}
 					class:chat-bubble-info={message.role === 'user'}
-					class="chat-bubble"
+					class="chat-bubble whitespace-pre-line"
 				>
 					{message.content}
 				</div>
@@ -128,15 +134,16 @@
 			<h2 class="text-3xl">Let's start the conversation</h2>
 		{/each}
 		{#if loading}
-			<span class="loading loading-spinner loading-lg"></span>
+			<div>
+				<span class="loading loading-spinner loading-lg"></span>
+			</div>
 		{/if}
 	</div>
 
 	<form class="w-full" on:submit|preventDefault={handleSubmit}>
-		<input
-			class="input w-full h-16 mb-3 input-bordered max-w-full"
+		<textarea
+			class="textarea w-full h-16 mb-3 max-w-full resize-none transition-shadow focus-within:outline-none focus-within:shadow-md focus-within:shadow-primary bg-base-200"
 			disabled={loading}
-			type="text"
 			name="message"
 		/>
 		<button disabled={loading} class="btn btn-primary rounder-r-full" type="submit">Send</button>

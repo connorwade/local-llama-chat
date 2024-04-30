@@ -8,6 +8,13 @@
       "when": 1714427135016,
       "tag": "0000_pretty_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1714432172625,
+      "tag": "0001_fancy_rictor",
+      "breakpoints": true
     }
   ]
 }
