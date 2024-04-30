@@ -8,58 +8,53 @@
 	let { history, name } = data;
 	let loading = false;
 
-	console.log('history:', history);
+	let streamResult: string[] = [];
+	let streaming = false;
+	let chatWindow: HTMLDivElement;
 
-	// interface ResultFromString {
-	// 	chunks: string[];
-	// 	clean: () => void;
-	// }
+	const subscribe = async (roomId: string) => {
+		try {
+			const response = await fetch(`/chat/${roomId}`);
+			if (!response.ok) {
+				console.error('Failed to fetch');
+				return;
+			}
 
-	// let resultFromStream: ResultFromString = {
-	// 	chunks: [],
-	// 	clean: () => {
-	// 		resultFromStream.chunks = [];
-	// 	}
-	// };
+			if (response.body === null) {
+				console.error('Response body is null');
+				return;
+			}
 
-	// const subscribe = async () => {
-	// 	try {
-	// 		const response = await fetch('/chat');
-	// 		if (!response.ok) {
-	// 			console.error('Failed to fetch');
-	// 			return;
-	// 		}
+			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
 
-	// 		if (response.body === null) {
-	// 			console.error('Response body is null');
-	// 			return;
-	// 		}
+			if (!reader) {
+				console.error('Failed to get reader');
+				return;
+			}
 
-	// 		const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+			streaming = true;
 
-	// 		if (!reader) {
-	// 			console.error('Failed to get reader');
-	// 			return;
-	// 		}
+			while (true) {
+				const { done, value } = await reader?.read();
 
-	// 		while (true) {
-	// 			const { done, value } = await reader?.read();
+				if (done) {
+					break;
+				}
 
-	// 			if (done) {
-	// 				console.log('DONE');
-	// 				break;
-	// 			}
+				streamResult = streamResult.concat(value);
+				chatWindow.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+			}
+			streaming = false;
+			history = history.concat({ role: 'assistant', content: streamResult.join('') });
+			streamResult = [];
+		} catch (error) {
+			console.error('FETCHERROR:', error);
+		}
+	};
 
-	// 			console.log(value);
-	// 			resultFromStream.chunks.push(value);
-	// 			resultFromStream = { ...resultFromStream };
-	// 		}
-	// 	} catch (error) {
-	// 		console.error('FETCHERROR:', error);
-	// 	}
-	// };
-
-	// onMount(subscribe);
+	onMount(() => {
+		chatWindow.lastElementChild?.scrollIntoView();
+	});
 
 	const handleSubmit = async (e: Event) => {
 		const form = e.target as HTMLFormElement;
@@ -68,7 +63,7 @@
 		const roomId = $page.params.room;
 
 		loading = true;
-		const response = await fetch(`/chat/${roomId}/user`, {
+		const response = await fetch(`/chat/${roomId}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -86,22 +81,8 @@
 
 		history = resJson.history;
 
-		const newMessage = await fetch(`/chat/${roomId}`);
+		await subscribe(roomId);
 
-		if (!newMessage.ok) {
-			console.error('Failed to fetch new message');
-			console.error(await newMessage.json());
-			return;
-		}
-
-		const newMessageData = await newMessage.json();
-
-		console.log(newMessageData.message.content);
-
-		history = history.concat({
-			role: 'assistant',
-			content: newMessageData.message.content
-		});
 		loading = false;
 
 		form.reset();
@@ -115,7 +96,10 @@
 			><path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" /></svg
 		> Back</a
 	>
-	<div class="overflow-y-auto h-5/6 m-3 mb-8 p-1 border-primary rounded-md shadow-lg shadow-info">
+	<div
+		bind:this={chatWindow}
+		class="overflow-y-auto h-5/6 m-3 mb-8 p-1 border-primary rounded-md shadow-lg shadow-info"
+	>
 		{#each history as message}
 			<div
 				class="chat p-3"
@@ -133,7 +117,16 @@
 		{:else}
 			<h2 class="text-3xl">Let's start the conversation</h2>
 		{/each}
-		{#if loading}
+		{#if streaming}
+			<div class="chat p-3 chat-end">
+				<div class="chat-bubble chat-bubble-primary whitespace-pre-line">
+					{#each streamResult as chunk}
+						<span>{chunk}</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
+		{#if loading && !streaming}
 			<div>
 				<span class="loading loading-spinner loading-lg"></span>
 			</div>
@@ -149,9 +142,3 @@
 		<button disabled={loading} class="btn btn-primary rounder-r-full" type="submit">Send</button>
 	</form>
 </main>
-
-<!-- {#each resultFromStream.chunks as chunk}
-	<span>{chunk}</span>
-{:else}
-	<span>Loading...</span>
-{/each} -->
